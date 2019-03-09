@@ -1,3 +1,4 @@
+from bullet import Bullet, Check, YesNo, Input, VerticalPrompt # and etc...
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Inches, Pt
@@ -8,8 +9,27 @@ import sys
 TITLE_LAYOUT = 0
 BLANK = 10
 FONT = "Calibri"
-FILE_LOC = "../"
-SERMON_SERIES = ""
+FILE_LOC = ""
+SERMON_SERIES = "Signs of Life Series in John’s Gospel"
+
+cli = VerticalPrompt(
+    [
+        Input("What is the reference for Call to Worship?"),
+        Input("Filename?"),
+        Input("What is the reference for Confession of Sin?"),
+        Input("Filename?"),
+        Input("What is the reference for Assurance of Worship?"),
+        Input("Filename?"),
+        YesNo("Is it prayers of the people? "),
+        Input("Sermon title?"),
+        Input("Sermon reference?"),
+        #Bullet("What is your favorite programming language? ",
+         #     choices = ["C++", "Python", "Javascript", "Not here!"]),
+    ],
+    spacing = 1
+)
+
+result = cli.launch()
 
 class LiturgyElem:
     def __init__(self,f_name):
@@ -32,7 +52,6 @@ def parseFileLines(filename):
 def parseFile(filename):
     with open(filename,"r") as file:
         return file.read()
-
 
 #creates a textbox for a song slide, with parameters for placement, size, and boldness
 #returns a paragraph!!
@@ -58,7 +77,6 @@ def addCenterParagraph(frame,size,bold):
 
 #adds a left justified paragraph with given font size and boldness to the given frame
 def addLeftParagraph(frame,size,bold):
-    print(frame.paragraphs[0].font.name)
     if (frame.paragraphs[0].font.name == 'Calibri'):
         p = frame.add_paragraph()
     else:
@@ -91,7 +109,9 @@ def addSong(prs,filename):
         p.text = verse
 
 
+
 def addResponsiveSlide(prs,grace,segment):
+    i = 0
     #add title slide for segment
     first_slide = addBlank(prs)
     frame = addTextFrame(first_slide,(0.5,0.25,9,7.25))
@@ -100,11 +120,11 @@ def addResponsiveSlide(prs,grace,segment):
     title.text = segment
     if grace:
         mid = addCenterParagraph(frame,24,False)
-        mid.italic = True
         mid.text = "Now hear the gracious word of God from:"
     sub = addCenterParagraph(frame,30,True)
-    sub.text = input("What's the reference for the slide? ")
-    filename = FILE_LOC + input("Filename? ")
+    sub.text = result[i][1]
+    i+=1
+    filename = result[i][1]
     sections = parseFile(filename).split("$$$")
     #put first section of response
     frame = addTextFrame(first_slide,(0.5,1.5,9,6))
@@ -116,6 +136,7 @@ def addResponsiveSlide(prs,grace,segment):
         frame = addTextFrame(slide,(0.5,0.75,9,6.75))
         p = addLeftParagraph(frame,28,False)
         p.text = section
+    i+=1
 
 
 def addBlank(prs):
@@ -141,7 +162,7 @@ addResponsiveSlide(prs,False,"Call to Worship")
 addBlank(prs)
 
 #second, third, fourth song
-for i in range(3):
+for i in range(2):
     filename = FILE_LOC + input("Name of song? ")
     addSong(prs,filename)
     addBlank(prs)
@@ -173,7 +194,7 @@ addBlank(prs)
 prayer_slide = addBlank(prs)
 frame = addTextFrame(prayer_slide,(0,1.5,10,1.5))
 p = addCenterParagraph(frame,30,True)
-if (input("Is it prayers of the people this week? ") == "y"):
+if (result[6][1]):
     p.text = "Prayers of the People"
 else:
     p.text = "Prayers for our Church, Community, and World"
@@ -190,12 +211,12 @@ addBlank(prs)
 sermon_slide = prs.slides.add_slide(prs.slide_layouts[BLANK])
 frame = addTextFrame(sermon_slide,(0.75,1.5,8.5,4.5))
 title = addCenterParagraph(frame,30,True)
-title.text = input("Sermon title? ")
+title.text = result[7][1]
 mid = addCenterParagraph(frame,24,True)
 mid.font.input = True
 mid.text = SERMON_SERIES
 sub = addCenterParagraph(frame,30,True)
-sub.text = input("Sermon reference? ")
+sub.text = result[8][1]
 
 #closing song
 filename = FILE_LOC + input("Name of song? ")
